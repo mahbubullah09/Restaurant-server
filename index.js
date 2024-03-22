@@ -32,7 +32,7 @@ async function run() {
     await client.connect();
 
     const menuCollection = client.db("ResturantDB").collection("menu")
-
+    const reviewsCollction = client.db("ResturantDB").collection("reviews")
 
 
 
@@ -43,6 +43,14 @@ async function run() {
     app.get("/menu", async(req,res)=>{
         const menu = await menuCollection.find().toArray();
         res.send(menu)
+    })
+
+
+    // get all reviews
+
+    app.get('/reviews', async(req,res)=>{
+        const reviws = await reviewsCollction.find().toArray()
+        res.send(reviws)
     })
 
 

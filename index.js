@@ -54,8 +54,16 @@ async function run() {
         res.send(reviews)
     })
 
-    // Carts item post
+    // Carts 
 
+
+    //get carts
+
+    app.get('/carts', async(req, res)=>{
+      const result = await cartsCollction.find().toArray()
+      res.send(result)
+    })
+    //post carts
     app.post('/carts', async(req,res)=>{
 
       const cartItem = req.body;

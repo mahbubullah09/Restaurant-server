@@ -31,6 +31,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const usersCollection = client.db("ResturantDB").collection("users")
     const menuCollection = client.db("ResturantDB").collection("menu")
     const reviewsCollction = client.db("ResturantDB").collection("reviews")
     const cartsCollction = client.db("ResturantDB").collection("carts")
@@ -39,26 +40,42 @@ async function run() {
 
     // APIs
 
-    // get all menu
+    //User APIs
 
+    //post user
+
+    app.post('/users', async(req,res)=>{
+      const user = req.body;
+      const result = await usersCollection.insertOne(user)
+      res.send(result)
+    })
+
+
+
+    // menu APIS
+
+    //get menu
     app.get("/menu", async(req,res)=>{
         const menu = await menuCollection.find().toArray();
         res.send(menu)
     })
 
 
-    // get all reviews
+
+    //review APIs
+
+    // get reviews
 
     app.get('/reviews', async(req,res)=>{
         const reviews = await reviewsCollction.find().toArray()
         res.send(reviews)
     })
 
-    // Carts 
 
+
+    // Cart APIs
 
     //get carts
-
     app.get('/carts', async(req, res)=>{
 
       const email = req.query.email;
@@ -66,6 +83,7 @@ async function run() {
       const result = await cartsCollction.find(query).toArray()
       res.send(result)
     })
+
     //post carts
     app.post('/carts', async(req,res)=>{
 

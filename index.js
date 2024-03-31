@@ -42,10 +42,23 @@ async function run() {
 
     //User APIs
 
+    //get user
+
+    app.get('/users', async(req,res)=>{
+
+      const result = await usersCollection.find().toArray()
+      res.send(result)
+    })
+
     //post user
 
     app.post('/users', async(req,res)=>{
       const user = req.body;
+      const query = {email: user.email}
+      const existUser = await usersCollection.findOne(query)
+      if(existUser){
+        return res.send({message: "user already exist"})
+      }
       const result = await usersCollection.insertOne(user)
       res.send(result)
     })

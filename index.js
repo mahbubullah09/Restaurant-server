@@ -43,54 +43,87 @@ async function run() {
 
     //jwt APIs
 
-    app.post('/jwt', async(req,res)=>{
+    app.post('/jwt', async (req, res) => {
 
       const user = req.body
       console.log(user);
-      const token = jwt.sign( user, process.env.S_Token, {expiresIn: '1h'})
-      res.send({token: token})
+      const token = jwt.sign(user, process.env.S_Token, { expiresIn: '1h' })
+      res.send({ token: token })
     })
 
     //midlewere
 
-    const verifyToken = (req,res,next) =>{
-      console.log("inside ",req.headers.authorization);
+    const verifyToken = (req, res, next) => {
+      console.log("inside ", req.headers.authorization);
 
-      if(!req.headers.authorization){
-        return res.status(401).send({message: "unauthorized access"})
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: "unauthorized access" })
       }
       const token = req.headers.authorization.split(' ')[1]
-      jwt.verify(token, process.env.S_Token, (err,decoded)=>{
+      jwt.verify(token, process.env.S_Token, (err, decoded) => {
 
-        if(err){
-        return res.status(401).send({message: "unauthorized access"})
+        if (err) {
+          return res.status(401).send({ message: "unauthorized access" })
 
         }
         req.decoded = decoded
         next()
       })
-      
+
     }
+
+    // verify admoin middlewere
+
+    const verifyAdmin = async(req,res,next)=>{
+      const email = req.decoded.email
+      const query = {email: email}
+      const user = await usersCollection.findOne(query)
+
+      const isAdmin = user?.role === 'admin'
+      if(!isAdmin){
+        return res.status(403).send({ message: "forbidden access" })
+      }
+      next()
+    }
+
+   
 
     //User APIs
 
     //get user
 
-    app.get('/users', verifyToken, async(req,res)=>{
-      
-      
+    app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
+
+
       const result = await usersCollection.find().toArray()
       res.send(result)
     })
 
+    //admin api
+    app.get('/users/admin/:email', verifyToken,  async(req,res)=>{
+
+      const email = req.params.email
+      if(email !== req.decoded.email){
+        return res.status(403).send({ message: "forbidden access" })
+      }
+
+      const query = {email: email}
+      const user = await usersCollection.findOne(query)
+
+      let admin = false;
+      if(user){
+        admin = user?.role === 'admin'
+      }
+      res.send({ admin })
+    })
     //post user
 
-    app.post('/users', async(req,res)=>{
+    app.post('/users', async (req, res) => {
       const user = req.body;
-      const query = {email: user.email}
+      const query = { email: user.email }
       const existUser = await usersCollection.findOne(query)
-      if(existUser){
-        return res.send({message: "user already exist"})
+      if (existUser) {
+        return res.send({ message: "user already exist" })
       }
       const result = await usersCollection.insertOne(user)
       res.send(result)
@@ -100,33 +133,33 @@ async function run() {
 
 
 
-    app.delete('/users/:id', async (req,res)=>{
+    app.delete('/users/:id', async (req, res) => {
 
       const id = req.params.id
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
 
       const result = await usersCollection.deleteOne(query)
       res.send(result)
     })
-    
+
     //update user as admin
 
-    app.patch('/users/admin/:id', async(req,res)=>{
+    app.patch('/users/admin/:id', async (req, res) => {
       const id = req.params.id
       console.log(id);
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
 
       const updatedDoc = {
         $set: {
           role: "admin"
         }
       }
-      const result = await usersCollection.updateOne(query,updatedDoc)
+      const result = await usersCollection.updateOne(query, updatedDoc)
       res.send(result)
 
     })
 
- 
+
 
 
 
@@ -134,9 +167,9 @@ async function run() {
     // menu APIS
 
     //get menu
-    app.get("/menu", async(req,res)=>{
-        const menu = await menuCollection.find().toArray();
-        res.send(menu)
+    app.get("/menu", async (req, res) => {
+      const menu = await menuCollection.find().toArray();
+      res.send(menu)
     })
 
 
@@ -145,9 +178,9 @@ async function run() {
 
     // get reviews
 
-    app.get('/reviews', async(req,res)=>{
-        const reviews = await reviewsCollction.find().toArray()
-        res.send(reviews)
+    app.get('/reviews', async (req, res) => {
+      const reviews = await reviewsCollction.find().toArray()
+      res.send(reviews)
     })
 
 
@@ -155,16 +188,16 @@ async function run() {
     // Cart APIs
 
     //get carts
-    app.get('/carts', async(req, res)=>{
+    app.get('/carts', verifyToken, async (req, res) => {
 
       const email = req.query.email;
-      const query = {email: email}
+      const query = { email: email }
       const result = await cartsCollction.find(query).toArray()
       res.send(result)
     })
 
     //post carts
-    app.post('/carts', async(req,res)=>{
+    app.post('/carts', async (req, res) => {
 
       const cartItem = req.body;
       const result = await cartsCollction.insertOne(cartItem);
@@ -174,10 +207,10 @@ async function run() {
 
     //delete Cart
 
-    app.delete('/carts/:id', async (req,res)=>{
+    app.delete('/carts/:id', async (req, res) => {
 
       const id = req.params.id
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
 
       const result = await cartsCollction.deleteOne(query)
       res.send(result)
@@ -188,7 +221,7 @@ async function run() {
 
 
 
-    
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -202,9 +235,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('Resturant server is running')
+  res.send('Resturant server is running')
 })
 
 app.listen(port, () => {
-    console.log(`Resturant Server is running on port: ${port}`)
+  console.log(`Resturant Server is running on port: ${port}`)
 })

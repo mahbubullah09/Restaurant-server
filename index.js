@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
@@ -40,12 +41,44 @@ async function run() {
 
     // APIs
 
+    //jwt APIs
+
+    app.post('/jwt', async(req,res)=>{
+
+      const user = req.body
+      console.log(user);
+      const token = jwt.sign( user, process.env.S_Token, {expiresIn: '1h'})
+      res.send({token: token})
+    })
+
+    //midlewere
+
+    const verifyToken = (req,res,next) =>{
+      console.log("inside ",req.headers.authorization);
+
+      if(!req.headers.authorization){
+        return res.status(401).send({message: "unauthorized access"})
+      }
+      const token = req.headers.authorization.split(' ')[1]
+      jwt.verify(token, process.env.S_Token, (err,decoded)=>{
+
+        if(err){
+        return res.status(401).send({message: "unauthorized access"})
+
+        }
+        req.decoded = decoded
+        next()
+      })
+      
+    }
+
     //User APIs
 
     //get user
 
-    app.get('/users', async(req,res)=>{
-
+    app.get('/users', verifyToken, async(req,res)=>{
+      
+      
       const result = await usersCollection.find().toArray()
       res.send(result)
     })
@@ -93,18 +126,7 @@ async function run() {
 
     })
 
-    // app.patch('/users/admin/:id', async (req, res) => {
-    //   const id = req.params.id;
-    //   const filter = { _id: new ObjectId(id) };
-    //   const updatedDoc = {
-    //     $set: {
-    //       role: 'admin'
-    //     }
-    //   }
-    //   const result = await usersCollection.updateOne(filter, updatedDoc);
-    //   res.send(result);
-    // })
-
+ 
 
 
 

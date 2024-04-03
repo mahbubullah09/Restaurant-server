@@ -170,6 +170,16 @@ async function run() {
       res.send(menu)
     })
 
+    app.post('/menu', verifyToken, async (req, res) => {
+
+      const menu = req.body;
+      const result = await menuCollection.insertOne(menu);
+      res.send(result)
+
+    })
+
+
+
 
 
     //review APIs
@@ -186,7 +196,7 @@ async function run() {
     // Cart APIs
 
     //get carts
-    app.get('/carts',  async (req, res) => {
+    app.get('/carts',   async (req, res) => {
 
       const email = req.query.email;
       const query = { email: email }
@@ -195,7 +205,7 @@ async function run() {
     })
 
     //post carts
-    app.post('/carts', async (req, res) => {
+    app.post('/carts', verifyToken, async (req, res) => {
 
       const cartItem = req.body;
       const result = await cartsCollction.insertOne(cartItem);
@@ -205,7 +215,7 @@ async function run() {
 
     //delete Cart
 
-    app.delete('/carts/:id', async (req, res) => {
+    app.delete('/carts/:id', verifyToken, async (req, res) => {
 
       const id = req.params.id
       const query = { _id: new ObjectId(id) }

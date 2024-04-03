@@ -230,7 +230,7 @@ async function run() {
     // Cart APIs
 
     //get carts
-    app.get('/carts',   async (req, res) => {
+    app.get('/carts', verifyToken,   async (req, res) => {
 
       const email = req.query.email;
       const query = { email: email }

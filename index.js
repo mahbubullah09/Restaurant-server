@@ -226,6 +226,30 @@ async function run() {
       res.send(reviews)
     })
 
+    // post review 
+
+// Post review - Add a new review
+app.post('/reviews', verifyToken, async (req, res) => {
+  const { name, email, phone, details, rating } = req.body;
+
+  // Basic validation
+  if (!name || !email || !phone || !details || !rating) {
+    return res.status(400).send({ message: 'All fields are required' });
+  }
+
+  const newReview = {
+    name,
+    email,
+    phone,
+    details,
+    rating: parseInt(rating),  
+    
+  };
+
+  const result = await reviewsCollction.insertOne(newReview);
+  res.status(201).send({ message: 'Review added successfully', reviewId: result.insertedId });
+});
+
 
 
     // Cart APIs
@@ -283,6 +307,18 @@ async function run() {
       const result = await paymentCollection.insertOne(payment);
       res.send(result);
   });
+
+  // Get payment history by user email
+app.get('/payments/:email',verifyToken, async (req, res) => {
+  const userEmail = req.params.email;
+  try {
+      const payments = await paymentCollection.find({ email: userEmail }).toArray();
+      res.send(payments);
+  } catch (error) {
+      console.error("Error fetching payment history:", error);
+      res.status(500).send({ message: "Failed to fetch payment history" });
+  }
+});
 
 
 

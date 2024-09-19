@@ -262,6 +262,17 @@ async function run() {
 
 
 
+    //payments
+
+    app.post('/payments', async (req,res) =>{
+      const like = req.body;
+      console.log(like);
+      const result = await paymentCollection.insertOne(like)
+      res.send(result);
+    })
+
+
+
 
 
     // Send a ping to confirm a successful connection

@@ -36,6 +36,7 @@ async function run() {
     const menuCollection = client.db("ResturantDB").collection("menu")
     const reviewsCollction = client.db("ResturantDB").collection("reviews")
     const cartsCollction = client.db("ResturantDB").collection("carts")
+    const paymentCollection = client.db("ResturantDB").collection("payments")
 
 
 
@@ -43,43 +44,43 @@ async function run() {
 
     //jwt APIs
 
-      // jwt related api
-      app.post('/jwt', async (req, res) => {
-        const user = req.body;
-        const token = jwt.sign(user, process.env.S_Token, { expiresIn: '1h' });
-        res.send({ token });
-      })
+    // jwt related api
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.S_Token, { expiresIn: '1h' });
+      res.send({ token });
+    })
 
-  
-   
+
+
 
 
     // middlwere
 
-    const verifyToken= (req,res,next)=>{
+    const verifyToken = (req, res, next) => {
 
-      console.log("indide verify token: ",req.headers.authorization);
+      console.log("indide verify token: ", req.headers.authorization);
 
-      if(!req.headers.authorization){
-        return res.status(401).send({message: "forbidden Access"})
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: "forbidden Access" })
       }
-      
-      const token = req.headers.authorization.split(' ')[1]
-      console.log("token: ",token);
 
-      jwt.verify(token, process.env.S_Token, (err,decoded)=>{
-        if(err){
-          return res.status(401).send({message: "forbidden access"})
+      const token = req.headers.authorization.split(' ')[1]
+      console.log("token: ", token);
+
+      jwt.verify(token, process.env.S_Token, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: "forbidden access" })
         }
         req.decoded = decoded
         next()
       })
-      
+
     }
 
 
-     // use verify admin after verifyToken
-     const verifyAdmin = async (req, res, next) => {
+    // use verify admin after verifyToken
+    const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
       const user = await usersCollection.findOne(query);
@@ -92,7 +93,7 @@ async function run() {
     //User APIs
     //get user
 
-    app.get('/users', verifyToken, verifyAdmin,  async (req, res) => {
+    app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
 
       const result = await usersCollection.find().toArray()
       res.send(result)
@@ -193,7 +194,7 @@ async function run() {
       res.send(result)
     })
 
-    app.patch('/menu/:id', verifyToken,verifyAdmin, async (req, res) => {
+    app.patch('/menu/:id', verifyToken, verifyAdmin, async (req, res) => {
       const item = req.body;
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) }
@@ -230,7 +231,7 @@ async function run() {
     // Cart APIs
 
     //get carts
-    app.get('/carts', verifyToken,   async (req, res) => {
+    app.get('/carts', verifyToken, async (req, res) => {
 
       const email = req.query.email;
       const query = { email: email }
@@ -259,18 +260,29 @@ async function run() {
     })
 
 
+    //delete all cart by email
+
+
+    app.delete('/carts', verifyToken, async (req, res) => {
+      const userEmail = req.query.email; 
+      const query = { userEmail: userEmail };
+    
+      const result = await cartsCollction.deleteMany(query);
+      res.send(result);
+    });
+
+
 
 
 
     //payments
 
-    app.post('/payments', async (req,res) =>{
-      const like = req.body;
-      console.log(like);
-      const result = await paymentCollection.insertOne(like)
+    app.post('/payments', async (req, res) => {
+      console.log("Received payment request:", req.body); // Add this line
+      const payment = req.body;
+      const result = await paymentCollection.insertOne(payment);
       res.send(result);
-    })
-
+  });
 
 
 
